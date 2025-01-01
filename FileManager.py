@@ -1,6 +1,7 @@
 from ZipFileGenerator import ZipGenerator
 import os
 import shutil
+import time
 
 path = "D:\\ZipManager"
 image_types = [
@@ -45,7 +46,7 @@ class FileManager:
             if result == True:
                 folder_path = os.path.join(path, folder_name)
                 ZipGenerator(folder_path, sub_folder_name)
-                self.delete_sub_folder(folder_path, sub_folder_name)
+                self.delete_sub_folder(folder_path, sub_folder_name, folder_name)
             else:
                 self.error_list.append(folder_name)
         if len(self.error_list) != 0:
@@ -94,10 +95,17 @@ class FileManager:
         print("error")
         return False
 
-    def delete_sub_folder(self, folder_path, sub_folder_name):
+    def delete_sub_folder(self, folder_path, sub_folder_name, folder_name):
+        retries = 3
         print(f"deleting {sub_folder_name}")
-        full_path = os.path.join(folder_path, sub_folder_name)
-        shutil.rmtree(full_path)
+        for i in range(retries):
+            try:
+                full_path = os.path.join(folder_path, sub_folder_name)
+                shutil.rmtree(full_path)
+                return
+            except PermissionError as e:
+                time.sleep(3)
+        self.error_list.append(folder_name)
 
 
 if __name__ == "__main__":
