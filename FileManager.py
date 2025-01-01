@@ -1,4 +1,6 @@
 from ZipFileGenerator import ZipGenerator
+from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
 import os
 import shutil
 import time
@@ -26,6 +28,7 @@ class FileManager:
     def __init__(self):
         self.folder_list = list()
         self.error_list = list()
+        self.lock = Lock()
         self.scan_folder()
 
     def scan_folder(self):
@@ -40,17 +43,22 @@ class FileManager:
         for i in self.folder_list:
             print(f"{i}\n")
 
-    def compress_file(self):
-        for folder_name in self.folder_list:
-            result, sub_folder_name = self.check_file_correctness(folder_name)
-            if result == True:
-                folder_path = os.path.join(path, folder_name)
-                ZipGenerator(folder_path, sub_folder_name)
-                self.delete_sub_folder(folder_path, sub_folder_name, folder_name)
-            else:
-                self.error_list.append(folder_name)
+    def multi_compress_file(self):
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            for folder_name in self.folder_list:
+                executor.submit(self.compress_file, folder_name)
         if len(self.error_list) != 0:
             print(f"\n\nsome folder error {self.error_list}")
+
+    def compress_file(self, folder_name):
+        result, sub_folder_name = self.check_file_correctness(folder_name)
+        if result == True:
+            folder_path = os.path.join(path, folder_name)
+            ZipGenerator(folder_path, sub_folder_name)
+            self.delete_sub_folder(folder_path, sub_folder_name, folder_name)
+        else:
+            with self.lock:
+                self.error_list.append(folder_name)
 
     def check_file_correctness(self, folder_name):
         filename_extention = str()
@@ -110,7 +118,7 @@ class FileManager:
 
 if __name__ == "__main__":
     file_manager = FileManager()
-    file_manager.compress_file()
+    file_manager.multi_compress_file()
 
 """
 folder <-folder name            
