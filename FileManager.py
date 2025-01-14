@@ -21,13 +21,14 @@ image_types = [
     "raw",
     "svg",
     "webp",
+    "jfif",
 ]
 
 
 class FileManager:
     def __init__(self):
         self.folder_list = list()
-        self.error_list = list()
+        self.error_list = dict()
         self.lock = Lock()
         self.scan_folder()
 
@@ -43,13 +44,6 @@ class FileManager:
         for i in self.folder_list:
             print(f"{i}\n")
 
-    def multi_compress_file(self):
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            for folder_name in self.folder_list:
-                executor.submit(self.compress_file, folder_name)
-        if len(self.error_list) != 0:
-            print(f"\n\nsome folder error {self.error_list}")
-
     def compress_file(self, folder_name):
         result, sub_folder_name = self.check_file_correctness(folder_name)
         if result == True:
@@ -58,7 +52,14 @@ class FileManager:
             self.delete_sub_folder(folder_path, sub_folder_name, folder_name)
         else:
             with self.lock:
-                self.error_list.append(folder_name)
+                self.error_list[folder_name] = "file content error"
+
+    def multi_compress_file(self):
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            for folder_name in self.folder_list:
+                executor.submit(self.compress_file, folder_name)
+        if len(self.error_list.keys()) != 0:
+            print(f"\n\nsome folder error {self.error_list}")
 
     def check_file_correctness(self, folder_name):
         filename_extention = str()
@@ -113,7 +114,8 @@ class FileManager:
                 return
             except PermissionError as e:
                 time.sleep(3)
-        self.error_list.append(folder_name)
+        with self.lock:
+            self.error_list[folder_name] = "delete error"
 
 
 if __name__ == "__main__":
