@@ -60,6 +60,7 @@ class FileManager:
     def multi_compress_file(self):
         with ThreadPoolExecutor(max_workers=5) as executor:
             for folder_name in self.folder_list:
+                print(f"compressing {folder_name}")
                 executor.submit(self.compress_file, folder_name)
         if len(self.error_list.keys()) != 0:
             print(f"\n\nsome folder error {self.error_list}")
@@ -113,7 +114,7 @@ class FileManager:
 
     def delete_sub_folder(self, folder_path, sub_folder_name, folder_name):
         retries = 3
-        print(f"deleting {sub_folder_name}")
+        print(f"deleted {sub_folder_name}")
         for i in range(retries):
             try:
                 full_path = os.path.join(folder_path, sub_folder_name)

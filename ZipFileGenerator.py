@@ -12,16 +12,10 @@ class ZipGenerator:
 
     def compress_folder(self):
         if os.path.exists(self.folder_path) and os.path.isdir(self.full_path):
-            sys.stdout.write(f"\r{self.sub_folder_title} compressing....")
-            sys.stdout.flush()
             output_path = os.path.join(self.folder_path, "game_zip")
             shutil.make_archive(
                 output_path, "zip", self.folder_path, self.sub_folder_title
             )
-            sys.stdout.write(
-                "\r" + " " * len(f"{self.sub_folder_title} compressing....") + "\r"
-            )
-            sys.stdout.flush()
 
 
 """
