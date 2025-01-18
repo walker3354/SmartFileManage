@@ -88,7 +88,7 @@ class FileManager:
                 other_file_counter += 1
                 error_file_list.append(file_name)
                 sub_folder_name = file_name
-        if image_flag == True and other_file_counter == 1:
+        if image_flag == True and compress_flag == False and other_file_counter == 1:
             return True, sub_folder_name
         elif image_flag == True and other_file_counter > 1:
             sub_folder_name = self.organize_unrelated_data(folder_name, error_file_list)
