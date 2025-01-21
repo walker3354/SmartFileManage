@@ -1,29 +1,14 @@
-from ZipFileGenerator import ZipGenerator
+from ZipPackager.ZipFileGenerator import ZipGenerator
 from concurrent.futures import ThreadPoolExecutor
+from Common.JsonLoader import JsonLoader
 from threading import Lock
 import os
 import shutil
 import time
 
-path = "D:\\ZipManager"
-compressed_file_types = ["zip", "7z", "rar"]
-image_types = [
-    "jpg",
-    "jpeg",
-    "png",
-    "gif",
-    "bmp",
-    "tiff",
-    "psd",
-    "pdf",
-    "eps",
-    "ai",
-    "indd",
-    "raw",
-    "svg",
-    "webp",
-    "jfif",
-]
+path = JsonLoader("zip_path").load_item()
+compressed_file_types = JsonLoader("compressed_file_types").load_item()
+image_types = JsonLoader("image_types").load_item()
 
 
 class FileManager:

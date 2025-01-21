@@ -1,27 +1,12 @@
 from torchvision import models, transforms
 from PIL import Image
+from Common.JsonLoader import JsonLoader
 import torch
 import os
 
-standar = 0.9
-path = "D:\\test_folder"
-image_types = [
-    "jpg",
-    "jpeg",
-    "png",
-    "gif",
-    "bmp",
-    "tiff",
-    "psd",
-    "pdf",
-    "eps",
-    "ai",
-    "indd",
-    "raw",
-    "svg",
-    "webp",
-    "jfif",
-]
+standard = JsonLoader("pic_standard").load_item()
+path = JsonLoader("pic_path").load_item()
+image_types = JsonLoader("image_types").load_item()
 
 
 class ImageReader:
@@ -46,6 +31,9 @@ class ImageReader:
 
     def scan_folder(self):
         self.sub_folder_list = os.listdir(path)
+        for file in self.sub_folder_list:
+            if os.path.isdir(os.path.join(path, file)) == False:
+                self.sub_folder_list.remove(file)
         if len(self.sub_folder_list) == 0:
             return False
         return True
@@ -59,7 +47,7 @@ class ImageReader:
                 sub_folder_images_path.append(file_path)
         return sub_folder_images_path
 
-    def extract_features(self, image_paths):
+    def extract_features(self, sub_folder, image_paths):
         images = []
         for image_path in image_paths:
             images.append(self.preprocess(Image.open(image_path).convert("RGB")))
@@ -73,29 +61,36 @@ class ImageReader:
         for sub_folder in self.sub_folder_list:
             print(f'extracting "{sub_folder}" content')
             image_paths = self.scan_sub_folder_pic(sub_folder)
-            features[sub_folder] = self.extract_features(image_paths)
+            if image_paths == []:
+                continue
+            features[sub_folder] = self.extract_features(sub_folder, image_paths)
         feature_keys = list(features.keys())
 
-        for i in range(len(features.values())):
+        for i in range(len(features.values()) - 1):
             for j in range(i + 1, len(features.values())):
+                avg = 0
+                counter = 0
                 feature1 = features[feature_keys[i]]
                 feature2 = features[feature_keys[j]]
                 similarity_matrix = torch.nn.functional.cosine_similarity(
                     feature1.unsqueeze(1), feature2.unsqueeze(0), dim=2
                 )
                 for sim in similarity_matrix.flatten():
-                    if sim.item() > standar:
+                    avg += sim.item()
+                    counter += 1
+                    if sim.item() > standard:
                         self.similarity_list.append(
-                            feature_keys[i] + ":" + feature_keys[j]
+                            feature_keys[i] + " : " + feature_keys[j]
                         )
                         break
+                print(f"{feature_keys[i]} : {feature_keys[j]} averge :{avg/counter}")
 
 
 if __name__ == "__main__":
     img_reader = ImageReader()
     img_reader.execute()
     if len(img_reader.similarity_list) != 0:
-        print("find similarit!!!\n")
+        print("\nfind similarit!!!\n")
         for i in img_reader.similarity_list:
             print(i)
     else:

@@ -1,0 +1,23 @@
+{
+  "pic_path": "D:\\test_folder",
+  "pic_standard": 0.9,
+  "zip_path": "D:\\ZipManager",
+  "compressed_file_types": ["zip", "7z", "rar"],
+  "image_types": [
+    "jpg",
+    "jpeg",
+    "png",
+    "gif",
+    "bmp",
+    "tiff",
+    "psd",
+    "pdf",
+    "eps",
+    "ai",
+    "indd",
+    "raw",
+    "svg",
+    "webp",
+    "jfif"
+  ]
+}
