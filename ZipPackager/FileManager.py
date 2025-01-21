@@ -75,12 +75,12 @@ class FileManager:
             full_path = os.path.join(os.path.join(path, folder_name), file_name)
             if (
                 os.path.isdir(full_path) == False
-                and file_name.split(".")[1] in image_types
+                and file_name.split(".")[-1] in image_types
             ):
                 image_flag = True
             elif (
                 os.path.isdir(full_path) == False
-                and file_name.split(".")[1] in compressed_file_types
+                and file_name.split(".")[-1] in compressed_file_types
             ):
                 compress_flag = True
                 other_file_counter += 1
