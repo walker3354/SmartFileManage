@@ -1,4 +1,4 @@
-from FileManager import FileManager
+from ZipPackager.FileManager import FileManager
 
 if __name__ == "__main__":
     file_manager = FileManager()

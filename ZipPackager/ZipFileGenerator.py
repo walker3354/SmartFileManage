@@ -1,6 +1,5 @@
 import shutil
 import os
-import sys
 
 
 class ZipGenerator:
