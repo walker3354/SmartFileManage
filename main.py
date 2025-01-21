@@ -5,7 +5,7 @@ if __name__ == "__main__":
     img_reader = ImageReader()
     img_reader.execute()
     if len(img_reader.similarity_list) != 0:
-        print("find similarit!!!\n")
+        print("\nfind similarit!!!\n")
         for i in img_reader.similarity_list:
             print(i)
     else:

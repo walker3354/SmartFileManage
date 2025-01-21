@@ -3,6 +3,7 @@ from PIL import Image
 from Common.JsonLoader import JsonLoader
 import torch
 import os
+import json
 
 standard = JsonLoader("pic_standard").load_item()
 path = JsonLoader("pic_path").load_item()
@@ -47,13 +48,44 @@ class ImageReader:
                 sub_folder_images_path.append(file_path)
         return sub_folder_images_path
 
+    def check_log(self, sub_folder):
+        full_path = os.path.join(path, sub_folder, f"{sub_folder}_log")
+        if os.path.isdir(full_path):
+            if os.path.isfile(os.path.join(full_path, f"{sub_folder}.json")):
+                return True
+        return False
+
+    def create_log(self, sub_folder, features):
+        data = {}
+        for i, feature in enumerate(features):
+            data[f"feature_{i}"] = feature.cpu().numpy().tolist()
+        log_path = os.path.join(path, sub_folder, f"{sub_folder}_log")
+        os.makedirs(log_path, exist_ok=True)
+        file_path = os.path.join(log_path, f"{sub_folder}.json")
+        with open(file_path, "w", encoding="utf-8") as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
+
+    def read_log(self, sub_folder):
+        file_path = os.path.join(
+            path, sub_folder, f"{sub_folder}_log", f"{sub_folder}.json"
+        )
+        with open(file_path, "r", encoding="utf-8") as file:
+            data = json.load(file)
+        features = []
+        for key in sorted(data.keys()):
+            features.append(torch.tensor(data[key]))
+        return torch.stack(features).to(self.device)
+
     def extract_features(self, sub_folder, image_paths):
         images = []
+        if self.check_log(sub_folder) == True:
+            return self.read_log(sub_folder)
         for image_path in image_paths:
             images.append(self.preprocess(Image.open(image_path).convert("RGB")))
         images = torch.stack(images).to(self.device)
         with torch.no_grad():
             features = self.model(images)
+        self.create_log(sub_folder, features)
         return features
 
     def execute(self):  # features = {"sub_folder_name":feature_list}
@@ -84,17 +116,6 @@ class ImageReader:
                         )
                         break
                 print(f"{feature_keys[i]} : {feature_keys[j]} averge :{avg/counter}")
-
-
-if __name__ == "__main__":
-    img_reader = ImageReader()
-    img_reader.execute()
-    if len(img_reader.similarity_list) != 0:
-        print("\nfind similarit!!!\n")
-        for i in img_reader.similarity_list:
-            print(i)
-    else:
-        print("pass!!")
 
 
 """
