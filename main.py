@@ -8,6 +8,10 @@ if __name__ == "__main__":
         print("\nfind similarit!!!\n")
         for i in img_reader.similarity_list:
             print(i)
+    elif len(img_reader.relevance_list) != 0:
+        print("\nfind relevance!!!\n")
+        for i in img_reader.relevance_list:
+            print(i)
     else:
         print("pass!!")
     """

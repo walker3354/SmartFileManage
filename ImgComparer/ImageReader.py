@@ -14,6 +14,7 @@ class ImageReader:
     def __init__(self):
         self.sub_folder_list = []
         self.similarity_list = []
+        self.relevance_list = []
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT).to(
             self.device
@@ -112,6 +113,11 @@ class ImageReader:
                     counter += 1
                     if sim.item() > standard:
                         self.similarity_list.append(
+                            feature_keys[i] + " : " + feature_keys[j]
+                        )
+                        break
+                    elif sim.item() > 0.6:
+                        self.relevance_list.append(
                             feature_keys[i] + " : " + feature_keys[j]
                         )
                         break
