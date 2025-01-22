@@ -12,6 +12,7 @@ image_types = JsonLoader("image_types").load_item()
 
 
 class FileManager:
+
     def __init__(self):
         self.folder_list = list()
         self.error_list = dict()
@@ -57,16 +58,13 @@ class FileManager:
         sub_folder_name = str()
         error_file_list = list()
         for file_name in os.listdir(os.path.join(path, folder_name)):
-            full_path = os.path.join(os.path.join(path, folder_name), file_name)
-            if (
-                os.path.isdir(full_path) == False
-                and file_name.split(".")[-1] in image_types
-            ):
+            full_path = os.path.join(os.path.join(path, folder_name),
+                                     file_name)
+            if (os.path.isdir(full_path) == False
+                    and file_name.split(".")[-1] in image_types):
                 image_flag = True
-            elif (
-                os.path.isdir(full_path) == False
-                and file_name.split(".")[-1] in compressed_file_types
-            ):
+            elif (os.path.isdir(full_path) == False
+                  and file_name.split(".")[-1] in compressed_file_types):
                 compress_flag = True
                 other_file_counter += 1
                 error_file_list.append(file_name)
@@ -77,7 +75,8 @@ class FileManager:
         if image_flag == True and compress_flag == False and other_file_counter == 1:
             return True, sub_folder_name
         elif image_flag == True and other_file_counter > 1:
-            sub_folder_name = self.organize_unrelated_data(folder_name, error_file_list)
+            sub_folder_name = self.organize_unrelated_data(
+                folder_name, error_file_list)
             return True, sub_folder_name
         elif compress_flag == True and image_flag == True and other_file_counter == 1:
             return False, "compressed"
@@ -114,7 +113,6 @@ class FileManager:
 if __name__ == "__main__":
     file_manager = FileManager()
     file_manager.multi_compress_file()
-
 """
 folder <-folder name            
 └── folder<- sub_folder title and full path
