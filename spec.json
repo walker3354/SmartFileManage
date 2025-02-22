@@ -1,7 +1,7 @@
 {
-  "pic_path": "D:\\test_folder",
+  "pic_path": "C:\\Users\\USER\\Downloads\\ZinieQ",
   "pic_standard": 0.9,
-  "zip_path": "D:\\ZipManager",
+  "zip_path": "D:\\GG_test",
   "compressed_file_types": ["zip", "7z", "rar"],
   "image_types": [
     "jpg",

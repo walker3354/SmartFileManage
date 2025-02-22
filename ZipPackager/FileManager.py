@@ -2,118 +2,77 @@ from ZipPackager.ZipFileGenerator import ZipGenerator
 from concurrent.futures import ThreadPoolExecutor
 from Common.JsonLoader import JsonLoader
 from threading import Lock
-import os
-import shutil
-import time
+import os, shutil, time
 
 path = JsonLoader("zip_path").load_item()
 compressed_file_types = JsonLoader("compressed_file_types").load_item()
 image_types = JsonLoader("image_types").load_item()
+"""
+folder <-folder name            
+└── files
+└── images
+"""
 
 
 class FileManager:
 
     def __init__(self):
-        self.folder_list = list()
         self.error_list = dict()
         self.lock = Lock()
-        self.scan_folder()
+        self.zip_generater = ZipGenerator()
+        self.folder_list = self.scan_folder()
+
+    def execute(self):
+        compress_list = list()
+        for folder_name in self.folder_list:
+            result = self.check_folder_correctness(folder_name)
+            print(result)
+            if result == 2:
+                compress_list.append(folder_name)
+            else:
+                continue
+        for folder_name in compress_list:
+            print(f"compressing {folder_name}")
+            self.compress_files(folder_name)
 
     def scan_folder(self):
-        content = os.listdir(path)
-        if content.count == 0:
+        contents = os.listdir(path)
+        if contents.count == 0:
             print("the folder is empty")
-        else:
-            self.folder_list = content
+            return list()
+        folder_name_set = list()
+        for folder_name in contents:
+            if os.path.isdir(os.path.join(path,folder_name)) == True:
+                folder_name_set.append(folder_name)
+        return folder_name_set
 
-    def print_current_folder(self):
-        print(f"the total count of folder is {len(self.folder_list)}\n")
-        for i in self.folder_list:
-            print(f"{i}\n")
+    def extract_extention_name(self, file_name):
+        return file_name.split(".")[-1]
+    
+    def remove_dir_img_in_list(self, original_list):
+        image_list = list()
+        for content in original_list:
+            if self.extract_extention_name(content) in image_types:
+                image_list.append(content)
+                original_list.remove(content)
+        return original_list, image_list
 
-    def compress_file(self, folder_name):
-        result, sub_folder_name = self.check_folder_correctness(folder_name)
-        if result == True and sub_folder_name != "":
-            folder_path = os.path.join(path, folder_name)
-            ZipGenerator(folder_path, sub_folder_name)
-            self.delete_sub_folder(folder_path, sub_folder_name, folder_name)
-        elif result == False and sub_folder_name == "compressed":
-            print(f"{folder_name} already finished")
-        else:
-            with self.lock:
-                self.error_list[folder_name] = "file content error"
-
-    def multi_compress_file(self):
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            for folder_name in self.folder_list:
-                print(f"compressing {folder_name}")
-                executor.submit(self.compress_file, folder_name)
-        if len(self.error_list.keys()) != 0:
-            print(f"\n\nsome folder error {self.error_list}")
-
-    def check_folder_correctness(self, folder_name):
-        other_file_counter = 0
-        compress_flag = False
-        image_flag = False
-        sub_folder_name = str()
-        error_file_list = list()
-        for file_name in os.listdir(os.path.join(path, folder_name)):
-            full_path = os.path.join(os.path.join(path, folder_name),
-                                     file_name)
-            if (os.path.isdir(full_path) == False
-                    and file_name.split(".")[-1] in image_types):
-                image_flag = True
-            elif (os.path.isdir(full_path) == False
-                  and file_name.split(".")[-1] in compressed_file_types):
-                compress_flag = True
-                other_file_counter += 1
-                error_file_list.append(file_name)
-            else:
-                other_file_counter += 1
-                error_file_list.append(file_name)
-                sub_folder_name = file_name
-        if image_flag == True and compress_flag == False and other_file_counter == 1:
-            return True, sub_folder_name
-        elif image_flag == True and other_file_counter > 1:
-            sub_folder_name = self.organize_unrelated_data(
-                folder_name, error_file_list)
-            return True, sub_folder_name
-        elif compress_flag == True and image_flag == True and other_file_counter == 1:
-            return False, "compressed"
-        else:
-            return False, ""
-
-    def organize_unrelated_data(self, folder_name, file_list):
+    def check_folder_correctness(self, folder_name):#(0.empty folder (1.already finish (2.unfinish (3.folder error
         folder_path = os.path.join(path, folder_name)
-        sub_folder_path = os.path.join(folder_path, "new_game_folder")
-        if os.path.exists(sub_folder_path):
-            pass
+        folder_contents = os.listdir(folder_path)
+        if len(folder_contents) == 0:#(0)
+            return 0
+        content_list, image_list = self.remove_dir_img_in_list(folder_contents)
+        if len(image_list) > 0 and len(content_list) == 1 and self.extract_extention_name(content_list[0]) in compressed_file_types:#(1)
+            return 1
+        if len(image_list) > 0 and len(content_list) > 0:#(2)
+            return 2
         else:
-            os.makedirs(sub_folder_path)
-        for file in file_list:
-            if file == "new_game_folder":
-                continue
-            shutil.move(os.path.join(folder_path, file), sub_folder_path)
-        return sub_folder_path
+            return 3
 
-    def delete_sub_folder(self, folder_path, sub_folder_name, folder_name):
-        retries = 3
-        print(f"deleted {sub_folder_name}")
-        for i in range(retries):
-            try:
-                full_path = os.path.join(folder_path, sub_folder_name)
-                shutil.rmtree(full_path)
-                return
-            except PermissionError as e:
-                time.sleep(3)
-        with self.lock:
-            self.error_list[folder_name] = "delete error"
+    def compress_files(self, folder_name):
+        folder_path = os.path.join(path, folder_name)
+        folder_contents = os.listdir(folder_path)
+        content_list, image_list = self.remove_dir_img_in_list(folder_contents)
+        self.zip_generater.compress_files(folder_path,content_list)
 
-
-if __name__ == "__main__":
-    file_manager = FileManager()
-    file_manager.multi_compress_file()
-"""
-folder <-folder name            
-└── folder<- sub_folder title and full path
-"""

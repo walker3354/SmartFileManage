@@ -1,23 +1,21 @@
-import shutil
+import zipfile
 import os
 
-
 class ZipGenerator:
+    def __init__(self):
+        pass
 
-    def __init__(self, folder_path, sub_folder_title):
-        self.full_path = os.path.join(folder_path, sub_folder_title)
-        self.folder_path = folder_path
-        self.sub_folder_title = sub_folder_title
-        self.compress_folder()
-
-    def compress_folder(self):
-        if os.path.exists(self.folder_path) and os.path.isdir(self.full_path):
-            output_path = os.path.join(self.folder_path, "game_zip")
-            shutil.make_archive(output_path, "zip", self.folder_path,
-                                self.sub_folder_title)
-
-
-"""
-folder <-folder path            
-└── folder<- sub_folder title and full path
-"""
+    def compress_files(self, folder_path, content_list):
+        zip_file_path = os.path.join(folder_path, "Game1.zip")
+        with zipfile.ZipFile(zip_file_path, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
+            for content in content_list:
+                full_path = os.path.join(folder_path, content)
+                if os.path.isdir(full_path):
+                  for root, dirs, files in os.walk(full_path):
+                        for f in files:
+                            file_path = os.path.join(root, f)
+                            arcname = os.path.relpath(file_path, folder_path)
+                            zipf.write(file_path, arcname=arcname)
+                else:
+                    arcname = os.path.basename(full_path)
+                    zipf.write(full_path, arcname=arcname)

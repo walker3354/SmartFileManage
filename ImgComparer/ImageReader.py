@@ -125,7 +125,8 @@ class ImageReader:
                     counter += 1
                     if sim.item() > standard:
                         self.similarity_list.append(feature_keys[i] + " : " +
-                                                    feature_keys[j])
+                                                    feature_keys[j] +
+                                                    f" avg: \t{sim.item()}")
                         break
                     elif sim.item() > 0.6:
                         self.relevance_list.append(feature_keys[i] + " : " +
