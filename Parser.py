@@ -31,6 +31,7 @@ class Parser:
             print("pass")
 
     def executet_filemanager(self):
+        print("processing............")
         FileManager().execute()
         print("finished whole process")
 
